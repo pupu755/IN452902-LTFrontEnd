@@ -1,85 +1,86 @@
 :root {
-  --color-primary: #006CB4;
-  --color-danger: #E40C24;
-  --space: 16px;
+  --mau-chinh: #006CB4;
+  --mau-canh-bao: #E40C24;
+  --khoang-cach: 16px;
 }
 
-*, *::before, *::after {
+* {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  color: #222;
+  color: #333333;
 }
 
-.site-header {
+header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--space);
-  background: var(--color-primary);
+  padding: var(--khoang-cach);
+  background-color: var(--mau-chinh);
 }
 
-.site-header a {
-  color: #fff;
+header .logo {
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: bold;
   text-decoration: none;
 }
 
-.logo {
-  font-weight: bold;
-  font-size: 1.25rem;
-}
-
-.site-header nav a {
-  margin-left: var(--space);
+header nav a {
+  color: #ffffff;
+  text-decoration: none;
+  margin-left: var(--khoang-cach);
 }
 
 main {
-  padding: var(--space);
+  padding: var(--khoang-cach);
 }
 
 #search-form {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
-  margin-bottom: var(--space);
+  margin-bottom: var(--khoang-cach);
 }
 
 #event-list {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space);
+  gap: var(--khoang-cach);
 }
 
 .card {
-  border: 1px solid #ccc;
+  border: 1px solid #cccccc;
   border-radius: 8px;
-  padding: var(--space);
+  padding: var(--khoang-cach);
 }
 
 .card img {
   max-width: 100%;
-  height: auto;
   display: block;
+  height: auto;
 }
 
-.card a {
-  color: var(--color-primary);
+.card h2 a {
+  color: var(--mau-chinh);
+  text-decoration: none;
 }
 
-.badge-full {
-  background: var(--color-danger);
-  color: #fff;
+.het-cho {
+  background-color: var(--mau-canh-bao);
+  color: #ffffff;
   padding: 2px 8px;
   border-radius: 4px;
 }
 
 footer {
-  padding: var(--space);
   text-align: center;
-  border-top: 1px solid #ccc;
+  padding: var(--khoang-cach);
+  border-top: 1px solid #e0e0e0;
+  margin-top: var(--khoang-cach);
 }
 
 @media (min-width: 768px) {

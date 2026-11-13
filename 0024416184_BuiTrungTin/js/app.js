@@ -1,6 +1,5 @@
 const API_URL = 'http://localhost:4000';
 
-// Hàm có sẵn: đổi giờ UTC sang giờ Việt Nam, vd "08:00 12/09/2026"
 const formatDateTime = (iso) =>
   new Date(iso).toLocaleString('vi-VN', {
     timeZone: 'Asia/Ho_Chi_Minh',
@@ -8,91 +7,114 @@ const formatDateTime = (iso) =>
     day: '2-digit', month: '2-digit', year: 'numeric',
   });
 
-const eventList = document.querySelector('#event-list');
-const statusEl = document.querySelector('#status');
-const searchForm = document.querySelector('#search-form');
-const keywordInput = document.querySelector('#keyword');
-
-// Câu 2a
-const formatSeats = (event) =>
-  event.registeredCount >= event.capacity
-    ? 'Hết chỗ'
-    : `Còn ${event.capacity - event.registeredCount}/${event.capacity} chỗ`;
-
-// Câu 2b
-const renderEvents = (events) => {
-  const cards = events.map((event) => {
-    const card = document.createElement('article');
-    card.className = 'card';
-
-    const img = document.createElement('img');
-    img.setAttribute('src', 'img/event.svg');
-    img.setAttribute('alt', `Ảnh minh hoạ ${event.name}`);
-
-    const title = document.createElement('h2');
-    const link = document.createElement('a');
-    link.setAttribute('href', `event-detail.html?id=${encodeURIComponent(event.id)}`);
-    link.textContent = event.name;
-    title.append(link);
-
-    const timeP = document.createElement('p');
-    const time = document.createElement('time');
-    time.setAttribute('datetime', event.startTime);
-    time.textContent = formatDateTime(event.startTime);
-    timeP.append(time);
-
-    const locationP = document.createElement('p');
-    locationP.textContent = event.location;
-
-    const seatsP = document.createElement('p');
-    seatsP.className = 'seats';
-    if (event.registeredCount >= event.capacity) {
-      const badge = document.createElement('span');
-      badge.className = 'badge-full';
-      badge.textContent = formatSeats(event);
-      seatsP.append(badge);
-    } else {
-      seatsP.textContent = formatSeats(event);
-    }
-
-    card.append(img, title, timeP, locationP, seatsP);
-    return card;
-  });
-
-  eventList.replaceChildren(...cards);
+const formatSeats = (event) => {
+  if (event.registeredCount >= event.capacity) {
+    return 'Hết chỗ';
+  }
+  const soConLai = event.capacity - event.registeredCount;
+  return 'Còn ' + soConLai + '/' + event.capacity + ' chỗ';
 };
 
-// Câu 2c
-const loadEvents = async (keyword = '') => {
-  const params = new URLSearchParams({ pageSize: '50' });
-  if (keyword !== '') {
-    params.set('q', keyword);
+const renderEvents = (events) => {
+  const dsThe = [];
+
+  for (let i = 0; i < events.length; i++) {
+    const sp = events[i];
+
+    const theCard = document.createElement('article');
+    theCard.setAttribute('class', 'card');
+
+    const theAnh = document.createElement('img');
+    theAnh.setAttribute('src', 'img/event.svg');
+    theAnh.setAttribute('alt', sp.name);
+
+    const theTieuDe = document.createElement('h2');
+    const theLienKet = document.createElement('a');
+    theLienKet.setAttribute('href', 'event-detail.html?id=' + sp.id);
+    theLienKet.textContent = sp.name;
+    theTieuDe.appendChild(theLienKet);
+
+    const theGio = document.createElement('p');
+    const theThoiGian = document.createElement('time');
+    theThoiGian.setAttribute('datetime', sp.startTime);
+    theThoiGian.textContent = formatDateTime(sp.startTime);
+    theGio.appendChild(theThoiGian);
+
+    const theDiaDiem = document.createElement('p');
+    theDiaDiem.textContent = sp.location;
+
+    const theSoCho = document.createElement('p');
+    theSoCho.setAttribute('class', 'so-cho');
+
+    if (sp.registeredCount >= sp.capacity) {
+      const theNhan = document.createElement('span');
+      theNhan.setAttribute('class', 'het-cho');
+      theNhan.textContent = formatSeats(sp);
+      theSoCho.appendChild(theNhan);
+    } else {
+      theSoCho.textContent = formatSeats(sp);
+    }
+
+    theCard.appendChild(theAnh);
+    theCard.appendChild(theTieuDe);
+    theCard.appendChild(theGio);
+    theCard.appendChild(theDiaDiem);
+    theCard.appendChild(theSoCho);
+
+    dsThe.push(theCard);
   }
 
-  statusEl.textContent = 'Đang tải…';
+  const khungDanhSach = document.querySelector('#event-list');
+  khungDanhSach.replaceChildren(...dsThe);
+};
+
+const loadEvents = async (keyword = '') => {
+  const theTrangThai = document.querySelector('#status');
+  const khungDanhSach = document.querySelector('#event-list');
+
+  theTrangThai.textContent = 'Đang tải…';
+
+  const thamSo = new URLSearchParams();
+  thamSo.set('pageSize', '50');
+
+  if (keyword !== '') {
+    thamSo.set('q', keyword);
+  }
 
   try {
-    const response = await fetch(`${API_URL}/api/events?${params}`);
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    const data = await response.json();
+    const phanHoi = await fetch(API_URL + '/api/events?' + thamSo.toString());
 
-    renderEvents(data.items);
-    statusEl.textContent =
-      data.items.length === 0
-        ? 'Không có sự kiện nào khớp từ khoá.'
-        : `Tìm thấy ${data.items.length} sự kiện`;
-  } catch (error) {
-    console.error(error);
-    eventList.replaceChildren();
-    statusEl.textContent = 'Không tải được dữ liệu, vui lòng thử lại.';
+    if (phanHoi.ok === false) {
+      khungDanhSach.replaceChildren();
+      theTrangThai.textContent = 'Không tải được dữ liệu, vui lòng thử lại.';
+      return;
+    }
+
+    const duLieu = await phanHoi.json();
+    const ds = duLieu.items;
+
+    renderEvents(ds);
+
+    if (ds.length === 0) {
+      theTrangThai.textContent = 'Không có sự kiện nào khớp từ khoá.';
+    } else {
+      theTrangThai.textContent = 'Tìm thấy ' + ds.length + ' sự kiện';
+    }
+  } catch (loi) {
+    khungDanhSach.replaceChildren();
+    theTrangThai.textContent = 'Không tải được dữ liệu, vui lòng thử lại.';
   }
 };
 
-searchForm.addEventListener('submit', (e) => {
+const formTimKiem = document.querySelector('#search-form');
+const oNhap = document.querySelector('#keyword');
+
+formTimKiem.addEventListener('submit', (e) => {
   e.preventDefault();
-  loadEvents(keywordInput.value.trim());
+  const tuKhoa = oNhap.value.trim();
+  loadEvents(tuKhoa);
 });
 
-loadEvents();
+document.addEventListener('DOMContentLoaded', () => {
+  loadEvents();
+});
