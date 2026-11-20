@@ -14,15 +14,24 @@ export function isPast(event: EventItem, now: Date): boolean {
   return new Date(event.startTime) < now
 }
 
+// Bỏ dấu tiếng Việt để gõ "hien mau" vẫn tìm được "Hiến máu"
+function normalize(text: string): string {
+  return text
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLowerCase()
+    .trim()
+}
+
 // Hàm thuần: cùng đầu vào → cùng đầu ra. Component gọi trực tiếp lúc render,
 // KHÔNG lưu kết quả vào state và KHÔNG cần useEffect.
 export function filterEvents(events: EventItem[], filter: EventFilter, now: Date): EventItem[] {
-  // Điều kiện đầu tiên đã làm mẫu.
-  // TODO(ch4-T4): thêm 2 điều kiện và sắp xếp:
-  //  - lọc theo filter.clubId ('' = mọi CLB)
-  //  - tìm filter.query trong tên, không phân biệt hoa thường VÀ dấu
-  //    (gợi ý: text.normalize('NFD').replace(/\p{Diacritic}/gu, ''), nhớ đổi 'đ' → 'd')
-  //  - sắp xếp tăng dần theo startTime bằng toSorted (không sửa mảng gốc)
-  //  Kiểm tra bằng src/lib/events.test.ts.
-  return events.filter((event) => filter.includePast || !isPast(event, now))
+  const query = normalize(filter.query)
+  return events
+    .filter((event) => filter.includePast || !isPast(event, now))
+    .filter((event) => filter.clubId === '' || event.clubId === filter.clubId)
+    .filter((event) => query === '' || normalize(event.name).includes(query))
+    .toSorted((a, b) => a.startTime.localeCompare(b.startTime))
 }

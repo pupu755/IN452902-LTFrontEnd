@@ -1,7 +1,9 @@
 import { createBrowserRouter } from 'react-router'
 import { ClubsPage } from '../pages/ClubsPage'
+import { EventDetailPage } from '../pages/EventDetailPage'
 import { EventsPage } from '../pages/EventsPage'
 import { HomePage } from '../pages/HomePage'
+import { NotFoundPage } from '../pages/NotFoundPage'
 import { RegisterPage } from '../pages/RegisterPage'
 import { RootLayout } from './RootLayout'
 
@@ -13,10 +15,10 @@ export const routes = [
     children: [
       { index: true, element: <HomePage /> },
       { path: 'events', element: <EventsPage /> },
+      { path: 'events/:eventId', element: <EventDetailPage /> },
       { path: 'clubs', element: <ClubsPage /> },
       { path: 'register', element: <RegisterPage /> },
-      // TODO(ch4-T3): thêm route "events/:eventId" → <EventDetailPage />
-      //               và route "*" → <NotFoundPage /> (trang 404)
+      { path: '*', element: <NotFoundPage /> }, // mọi URL không khớp → 404
     ],
   },
 ]

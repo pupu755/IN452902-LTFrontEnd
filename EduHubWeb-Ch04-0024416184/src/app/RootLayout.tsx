@@ -1,20 +1,20 @@
-import { Link, Outlet, ScrollRestoration } from 'react-router'
+import { NavLink, Outlet, ScrollRestoration } from 'react-router'
 import logo from '../assets/logo.svg'
 import { ThemeToggle } from '../components/ThemeToggle'
 
 const navItems = [
-  { to: '/', label: 'Trang chủ' },
-  { to: '/events', label: 'Sự kiện' },
-  { to: '/clubs', label: 'Câu lạc bộ' },
-  { to: '/register', label: 'Đăng ký thành viên' },
+  { to: '/', label: 'Trang chủ', end: true },
+  { to: '/events', label: 'Sự kiện', end: false },
+  { to: '/clubs', label: 'Câu lạc bộ', end: false },
+  { to: '/register', label: 'Đăng ký thành viên', end: false },
 ]
 
-const navLinkClass =
-  'flex min-h-11 items-center rounded-full px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/12 sm:px-4 sm:text-base'
-
-// TODO(ch4-T3): đổi <Link> trong menu thành <NavLink> để link của trang hiện tại
-//  được tô nền accent (bg-accent text-navy) và có aria-current="page".
-//  Gợi ý: className của NavLink nhận hàm ({ isActive }) => '…'; "Trang chủ" cần prop end.
+// NavLink tự đặt aria-current="page" và cho biết isActive khi URL khớp
+function navLinkClass({ isActive }: { isActive: boolean }) {
+  const base =
+    'flex min-h-11 items-center rounded-full px-3 py-2 text-sm font-semibold transition-colors sm:px-4 sm:text-base'
+  return isActive ? `${base} bg-accent text-navy` : `${base} text-white hover:bg-white/12`
+}
 
 export function RootLayout() {
   return (
@@ -28,20 +28,20 @@ export function RootLayout() {
 
       <header className="z-10 bg-header text-white shadow-md sm:sticky sm:top-0">
         <div className="mx-auto flex w-full max-w-page flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3 sm:px-6">
-          <Link to="/" className="inline-flex items-center gap-2 text-lg font-bold">
+          <NavLink to="/" className="inline-flex items-center gap-2 text-lg font-bold">
             <img src={logo} alt="" width={36} height={36} className="size-9" />
             <span>
               Edu<span className="text-accent">Hub</span>
             </span>
-          </Link>
+          </NavLink>
           <div className="flex flex-wrap items-center gap-1">
             <nav aria-label="Điều hướng chính">
               <ul className="flex flex-wrap gap-1">
                 {navItems.map((item) => (
                   <li key={item.to}>
-                    <Link to={item.to} className={navLinkClass}>
+                    <NavLink to={item.to} end={item.end} className={navLinkClass}>
                       {item.label}
-                    </Link>
+                    </NavLink>
                   </li>
                 ))}
               </ul>

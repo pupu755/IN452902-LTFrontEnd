@@ -1,8 +1,6 @@
 import { Link } from 'react-router'
 import { PageContainer } from '../components/PageContainer'
 
-// TODO(ch4-T3): gắn trang này vào route "*" trong app/router.tsx,
-//  và dùng lại ở EventDetailPage khi không tìm thấy sự kiện.
 export function NotFoundPage({ message = 'Trang bạn tìm không tồn tại hoặc đã được chuyển đi.' }) {
   return (
     <PageContainer narrow>
