@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router'
 import { ClubFilter } from '../components/ClubFilter'
 import { EventList } from '../components/EventList'
 import { PageContainer } from '../components/PageContainer'
@@ -7,14 +8,54 @@ import { clubs, events } from '../data'
 import { filterEvents } from '../lib/events'
 
 export function EventsPage() {
-  // State tối thiểu: chỉ những gì người dùng nhập
-  const [query, setQuery] = useState('')
-  const [clubId, setClubId] = useState('')
-  const [includePast, setIncludePast] = useState(false)
+  // Challenge ch4-T7: Đồng bộ bộ lọc với URL qua useSearchParams
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const query = searchParams.get('q') ?? ''
+  const clubId = searchParams.get('club') ?? ''
+  const includePast = searchParams.get('past') === 'true'
   const [now] = useState(() => new Date())
 
-  // Dữ liệu suy ra: tính lại mỗi lần render từ state — KHÔNG useState, KHÔNG useEffect.
-  // React Compiler tự nhớ kết quả nên không cần useMemo.
+  function handleQueryChange(newQuery: string) {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        if (newQuery) {
+          next.set('q', newQuery)
+        } else {
+          next.delete('q')
+        }
+        return next
+      },
+      { replace: true },
+    )
+  }
+
+  function handleClubChange(newClubId: string) {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      if (newClubId) {
+        next.set('club', newClubId)
+      } else {
+        next.delete('club')
+      }
+      return next
+    })
+  }
+
+  function handleIncludePastChange(checked: boolean) {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      if (checked) {
+        next.set('past', 'true')
+      } else {
+        next.delete('past')
+      }
+      return next
+    })
+  }
+
+  // Dữ liệu suy ra: tính lại mỗi lần render từ searchParams — KHÔNG useState, KHÔNG useEffect.
   const visibleEvents = filterEvents(events, { query, clubId, includePast }, now)
 
   return (
@@ -26,13 +67,13 @@ export function EventsPage() {
       </p>
 
       <search className="mb-6 grid gap-4 rounded-md border border-line bg-surface p-4 sm:grid-cols-[2fr_1fr]">
-        <SearchBar value={query} onChange={setQuery} />
-        <ClubFilter clubs={clubs} value={clubId} onChange={setClubId} />
+        <SearchBar value={query} onChange={handleQueryChange} />
+        <ClubFilter clubs={clubs} value={clubId} onChange={handleClubChange} />
         <label className="flex items-center gap-2 sm:col-span-2">
           <input
             type="checkbox"
             checked={includePast}
-            onChange={(e) => setIncludePast(e.target.checked)}
+            onChange={(e) => handleIncludePastChange(e.target.checked)}
             className="size-4.5 accent-primary"
           />
           Hiện cả sự kiện đã diễn ra
