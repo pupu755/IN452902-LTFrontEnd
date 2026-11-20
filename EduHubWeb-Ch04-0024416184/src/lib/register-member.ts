@@ -17,22 +17,57 @@ export type RegisterState =
 
 export const initialRegisterState: RegisterState = { status: 'idle' }
 
-export const STORAGE_KEY = 'eduhub-members'
+const STORAGE_KEY = 'eduhub-members'
 
-export const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+export function validateMember(input: MemberInput): FieldErrors {
+  const errors: FieldErrors = {}
+  if (!/^\d{10}$/.test(input.studentId)) errors.studentId = 'MSSV gồm đúng 10 chữ số.'
+  if (input.name.trim().length < 2) errors.name = 'Họ tên cần ít nhất 2 ký tự.'
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.email)) errors.email = 'Email chưa đúng định dạng.'
+  if (input.clubId === '') errors.clubId = 'Hãy chọn một câu lạc bộ.'
+  return errors
+}
+
+export function loadMembers(): MemberInput[] {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]') as MemberInput[]
+  } catch {
+    return []
+  }
+}
+
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 // Action cho useActionState: nhận state cũ + FormData, trả state mới.
-// TODO(ch4-T5):
-//  1. Đọc 4 ô từ formData (studentId, name, email, clubId), cắt khoảng trắng, email viết thường.
-//  2. Kiểm tra: MSSV đúng 10 chữ số; họ tên ≥ 2 ký tự; email đúng dạng; đã chọn CLB.
-//     Có lỗi → return { status: 'error', message, errors, values } (values để giữ lại giá trị đã nhập).
-//  3. await wait(800) — giả lập gửi lên server.
-//  4. Đọc danh sách cũ từ localStorage[STORAGE_KEY]; trùng email → lỗi "Email này đã đăng ký."
-//  5. Lưu thêm thành viên mới, return { status: 'success', member: values }.
+// Trong lúc hàm async này chạy, React đặt isPending = true.
 export async function registerMemberAction(
-  prev: RegisterState,
+  _prev: RegisterState,
   formData: FormData,
 ): Promise<RegisterState> {
-  console.info('TODO(ch4-T5): dữ liệu form', Object.fromEntries(formData))
-  return prev
+  const values: MemberInput = {
+    studentId: String(formData.get('studentId') ?? '').trim(),
+    name: String(formData.get('name') ?? '').trim(),
+    email: String(formData.get('email') ?? '').trim().toLowerCase(),
+    clubId: String(formData.get('clubId') ?? ''),
+  }
+
+  const errors = validateMember(values)
+  if (Object.keys(errors).length > 0) {
+    return { status: 'error', message: 'Vui lòng sửa các ô được đánh dấu.', errors, values }
+  }
+
+  await wait(800) // giả lập gửi lên server mất 0,8 giây
+
+  const members = loadMembers()
+  if (members.some((m) => m.email === values.email)) {
+    // Giống mã 409 Conflict của API thật ở Ch05
+    return {
+      status: 'error',
+      message: 'Email này đã đăng ký.',
+      errors: { email: 'Email đã tồn tại.' },
+      values,
+    }
+  }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify([...members, values]))
+  return { status: 'success', member: values }
 }
